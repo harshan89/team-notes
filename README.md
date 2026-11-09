@@ -1,6 +1,6 @@
 # Team Notes
 
-<img width="1507" height="760" alt="Screenshot 2026-11-09 at 15 42 34" src="https://github.com/user-attachments/assets/e97024c7-c36b-4d7d-aab7-49a80a6f02d0" />
+<img width="1507" height="760" alt="Screenshot 2026-11-09 at 15 42 34" src="https://github.com/user-attachments/assets/14a25b21-72c7-422b-9f7a-101d7f279f8d" />
 
 Team meeting notes. Pick a team and role, get a token, then use the web app or an AI assistant (MCP).
 
@@ -16,7 +16,7 @@ Team meeting notes. Pick a team and role, get a token, then use the web app or a
 
 ## Architecture
 
-<img width="3160" height="3661" alt="compacted-architecture" src="https://github.com/user-attachments/assets/56d42eb3-f50c-4753-8967-336700ae783b" />
+![Uploading compacted-architecture.svg…]()
 
 - **auth-service:** creates its RSA key on first start, issues 1-hour tokens with `teamId` and `role`.
 - **notes-service:** the only place access rules are enforced.
@@ -41,7 +41,9 @@ docker compose down              # stop (add -v to wipe data)
 **Local dev:** run `npm install && npm run dev` in `auth-service`, `notes-service`, `frontend-service` (http://localhost:5173) and, if needed, `mcp-server`. Start auth-service first. No `.env` is needed.
 
 ## Connect an AI agent (Claude)
-<img width="1505" height="893" alt="Screenshot 2026-11-09 at 10 52 00" src="https://github.com/user-attachments/assets/6dbc955b-e7ec-4cef-9712-f578e40f92db" />
+
+<img width="1505" height="893" alt="Screenshot 2026-11-09 at 10 52 00" src="https://github.com/user-attachments/assets/a893df72-b1ed-4f85-a926-9683fb449381" />
+
 <br>
 
 1. **Get a token:** sign in at http://localhost:8080 with a team and role, then click **Copy token**. The agent gets exactly that team's and role's access, for 1 hour.
@@ -57,7 +59,9 @@ docker compose down              # stop (add -v to wipe data)
 Then ask Claude things like "list my team's notes". When the token expires, get a new one and re-add the server.
 
 ## Test
-<img width="698" height="714" alt="Screenshot 2026-11-09 at 11 02 45" src="https://github.com/user-attachments/assets/774a69ad-c041-4f09-90c4-8dac7d5262bb" />
+
+<img width="698" height="714" alt="Screenshot 2026-11-09 at 11 02 45" src="https://github.com/user-attachments/assets/2ede82fe-c64d-4b42-8348-5803a04a0a73" />
+
 <br>
 
 ```sh
@@ -79,7 +83,9 @@ cd notes-service && npm test
 - **Not production-ready yet:** anyone can request a token for any team and role. Real login is the next step (see [ARCHITECTURE.md](ARCHITECTURE.md)).
 
 ## Observability
-<img width="1501" height="781" alt="Screenshot 2026-11-09 at 15 55 08" src="https://github.com/user-attachments/assets/e84267fc-49e1-482d-b96e-1ebe1578a2e3" />
+
+<img width="1501" height="781" alt="Screenshot 2026-11-09 at 15 55 08" src="https://github.com/user-attachments/assets/46a07969-cc68-4985-9535-3def88c90c05" />
+
 <br>
 Open Grafana at http://localhost:3300 (no login). The **Team Notes** dashboard shows requests per second, latency and errors for each service, plus live logs.
 
