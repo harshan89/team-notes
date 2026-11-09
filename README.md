@@ -15,8 +15,7 @@ Team meeting notes. Pick a team and role, get a token, then use the web app or a
 | viewer | own team | ❌ | ❌ |
 
 ## Architecture
-
-![Uploading compacted-architecture.svg…]()
+<img width="3160" height="3661" alt="compacted-architecture" src="https://github.com/user-attachments/assets/74543cdb-8040-4dcb-bd23-b9e31f45b8bb" />
 
 - **auth-service:** creates its RSA key on first start, issues 1-hour tokens with `teamId` and `role`.
 - **notes-service:** the only place access rules are enforced.
@@ -42,6 +41,8 @@ docker compose down              # stop (add -v to wipe data)
 
 ## Connect an AI agent (Claude)
 
+<img width="1503" height="890" alt="Screenshot 2026-11-09 at 10 46 15" src="https://github.com/user-attachments/assets/aff242c7-458d-4712-813f-89bd1d4cae3f" />
+<br>
 <img width="1505" height="893" alt="Screenshot 2026-11-09 at 10 52 00" src="https://github.com/user-attachments/assets/a893df72-b1ed-4f85-a926-9683fb449381" />
 
 <br>
@@ -61,6 +62,9 @@ Then ask Claude things like "list my team's notes". When the token expires, get 
 ## Test
 
 <img width="698" height="714" alt="Screenshot 2026-11-09 at 11 02 45" src="https://github.com/user-attachments/assets/2ede82fe-c64d-4b42-8348-5803a04a0a73" />
+
+<img width="988" height="546" alt="Screenshot 2026-11-09 at 08 39 42" src="https://github.com/user-attachments/assets/cbd0ce3f-243f-4f02-b505-d72a141db530" />
+
 
 <br>
 
