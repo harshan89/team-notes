@@ -1,0 +1,113 @@
+# OpenTelemetry settings shared by the Node services. Nothing in the service code changes:
+# NODE_OPTIONS loads the auto-instrumentation (http, express, pino logs, fetch) before the app starts.
+x-otel: &otel
+  NODE_OPTIONS: --experimental-loader=@opentelemetry/instrumentation/hook.mjs --import @opentelemetry/auto-instrumentations-node/register
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_TRACES_EXPORTER: otlp
+  OTEL_METRICS_EXPORTER: otlp
+  OTEL_LOGS_EXPORTER: otlp
+  OTEL_METRIC_EXPORT_INTERVAL: "10000" # ms
+  OTEL_NODE_ENABLED_INSTRUMENTATIONS: http,express,pino,undici
+  OTEL_SEMCONV_STABILITY_OPT_IN: http # metric: http.server.request.duration
+  OTEL_NODE_RESOURCE_DETECTORS: env,host,os,process # skip cloud metadata probes (GCP/AWS/...) at startup
+
+services:
+  auth-service:
+    build: ./auth-service
+    environment:
+      <<: *otel
+      OTEL_SERVICE_NAME: auth-service
+      PORT: 4000
+      JWT_PRIVATE_KEY_PATH: /app/keys/private.pem
+    volumes:
+      - auth-private-keys:/app/keys # private key never leaves this service
+    ports:
+      - "${AUTH_PORT:-4000}:4000" # clients log in here
+
+  note-service:
+    build: ./notes-service
+    environment:
+      <<: *otel
+      OTEL_SERVICE_NAME: notes-service
+      PORT: 3000
+      DB_PATH: /app/data/notes.sqlite
+      JWKS_URL: http://auth-service:4000/.well-known/jwks.json # public keys for JWT checks
+    ports:
+      - "${NOTES_PORT:-3000}:3000" # Swagger at /docs (the app itself goes through nginx / MCP)
+    volumes:
+      - note-data:/app/data
+    depends_on:
+      - auth-service
+
+  mcp-service:
+    build: ./mcp-server
+    environment:
+      <<: *otel
+      OTEL_SERVICE_NAME: mcp-server
+      PORT: 5000
+      NOTE_SERVICE_URL: http://note-service:3000 # the caller's token is passed on to it
+    ports:
+      - "${MCP_PORT:-5000}:5000"
+    depends_on:
+      - auth-service
+      - note-service
+
+  frontend:
+    build: ./frontend-service
+    ports:
+      - "${FRONTEND_PORT:-8080}:80" # open http://localhost:8080
+    depends_on:
+      - auth-service
+      - note-service
+
+  # ---- Observability: services → collector → Tempo (traces) / Loki (logs) / Prometheus (metrics) → Grafana
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.164.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./observability/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    depends_on:
+      - tempo
+      - loki
+      - prometheus
+
+  tempo:
+    image: grafana/tempo:2.10.8
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./observability/tempo.yaml:/etc/tempo.yaml:ro
+
+  loki:
+    image: grafana/loki:3.7.8 # built-in single-node config, accepts OTLP logs
+
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-otlp-receiver
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:13.2.5
+    environment:
+      # Local use only: no login, everyone is admin.
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/team-notes.json
+    volumes:
+      - ./observability/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./observability/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    ports:
+      - "${GRAFANA_PORT:-3300}:3000" # open http://localhost:3300
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+
+volumes:
+  auth-private-keys:
+  note-data:

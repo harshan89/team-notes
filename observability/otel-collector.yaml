@@ -1,0 +1,24 @@
+# Receives traces, metrics and logs from the services (OTLP) and sends each to its store.
+receivers:
+  otlp:
+    protocols:
+      grpc: { endpoint: 0.0.0.0:4317 }
+      http: { endpoint: 0.0.0.0:4318 }
+
+processors:
+  batch: {}
+
+exporters:
+  otlp/tempo: # traces
+    endpoint: tempo:4317
+    tls: { insecure: true }
+  otlphttp/loki: # logs (Loki's native OTLP endpoint)
+    endpoint: http://loki:3100/otlp
+  otlphttp/prometheus: # metrics (Prometheus' OTLP receiver)
+    endpoint: http://prometheus:9090/api/v1/otlp
+
+service:
+  pipelines:
+    traces: { receivers: [otlp], processors: [batch], exporters: [otlp/tempo] }
+    logs: { receivers: [otlp], processors: [batch], exporters: [otlphttp/loki] }
+    metrics: { receivers: [otlp], processors: [batch], exporters: [otlphttp/prometheus] }
