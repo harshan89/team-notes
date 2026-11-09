@@ -84,7 +84,7 @@ cd notes-service && npm test
 - **Public key is shared.** auth-service publishes only the public key at `/.well-known/jwks.json`. notes-service fetches it and uses it to check each token's signature. It can verify tokens but can't create them.
 - **Every request is checked** by notes-service: a valid signature, not expired, issued by `auth-service` for `notes-service`, and a known role. Tokens using any other algorithm are rejected.
 - **Access is decided in one place:** notes-service applies the team and role rules. The web app and the MCP server only pass the token on.
-- **Not production-ready yet:** anyone can request a token for any team and role. Real login is the next step (see [ARCHITECTURE.md](ARCHITECTURE.md)).
+- **Not production-ready yet:** anyone can request a token for any team and role. Real login is the next step.
 
 ## Observability
 
